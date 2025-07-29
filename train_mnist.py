@@ -37,6 +37,7 @@ batch_size = 64
 epochs = 5
 
 transform = transforms.Compose([
+    transforms.RandomRotation(10),
     transforms.ToTensor(),
     transforms.Normalize((0.1307,), (0.3081,))
 ])
