@@ -30,6 +30,15 @@
             font-size: 16px;
             cursor: pointer;
         }
+        #feedback {
+            margin-top: 10px;
+            font-size: 16px;
+            font-style: italic;
+            color: #555;
+        }
+        #correctBtn, #incorrectBtn {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -38,12 +47,19 @@
     <div class="controls">
         <button onclick="clearCanvas()">Effacer</button>
         <button onclick="predict()">Prédire</button>
+        <br>
+        <button id="correctBtn" onclick="confirmCorrect()">Correct</button>
+        <button id="incorrectBtn" onclick="confirmIncorrect()">Incorrect</button>
     </div>
     <h2>Prédiction: <span id="prediction">Dessinez un chiffre ! (à l'américaine)</span></h2>
+    <div id="feedback"></div>
 
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
+        const feedback = document.getElementById('feedback');
+        const correctBtn = document.getElementById('correctBtn');
+        const incorrectBtn = document.getElementById('incorrectBtn');
         let isDrawing = false;
         let session = null;
 
@@ -98,6 +114,27 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.beginPath();
             document.getElementById('prediction').textContent = 'Dessinez un chiffre ! (à l\'américaine)';
+            feedback.textContent = '';
+            correctBtn.style.display = 'none';
+            incorrectBtn.style.display = 'none';
+        }
+
+        function confirmCorrect() {
+            const prediction = document.getElementById('prediction').textContent;
+            if (prediction === 'Dessinez un chiffre ! (à l\'américaine)' || prediction === 'Modèle non chargé' || prediction === 'Error in prediction') {
+                feedback.textContent = 'Veuillez d\'abord faire une prédiction !';
+            } else {
+                feedback.textContent = 'Intelligente et Artificielle en bas (I.A.)';
+            }
+        }
+
+        function confirmIncorrect() {
+            const prediction = document.getElementById('prediction').textContent;
+            if (prediction === 'Dessinez un chiffre ! (à l\'américaine)' || prediction === 'Modèle non chargé' || prediction === 'Error in prediction') {
+                feedback.textContent = 'Veuillez d\'abord faire une prédiction !';
+            } else {
+                feedback.textContent = 'Detroit did not become human';
+            }
         }
 
         async function predict() {
@@ -105,6 +142,10 @@
                 document.getElementById('prediction').textContent = 'Modèle non chargé';
                 return;
             }
+
+            feedback.textContent = '';
+            correctBtn.style.display = 'none';
+            incorrectBtn.style.display = 'none';
 
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = 28;
@@ -142,6 +183,8 @@
                 }
                 
                 document.getElementById('prediction').textContent = prediction;
+                correctBtn.style.display = 'inline-block';
+                incorrectBtn.style.display = 'inline-block';
             } catch (e) {
                 console.error('Error running inference:', e);
                 document.getElementById('prediction').textContent = 'Error in prediction';
