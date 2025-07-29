@@ -63,6 +63,24 @@
         let isDrawing = false;
         let session = null;
 
+        const correctMessages = [
+            "I.A. : Intelligente et Artificielle en bas !",
+            "GPT approved ✔️",
+            "Almost sentient 👀",
+            "slAI 💅",
+            "Bientôt Akinator level",
+            "Je broie la langue de MNIST",
+        ];
+        const incorrectMessages = [
+            "Detroit did not become human...",
+            "L'IA s'est pas trompée, tu sais juste pas dessiner 👀",
+            "Un dessin euuh vreumant",
+            "Erreur 404 : Chiffre non reconnu !",
+            "Ah la prédiction n'était pas correcte ! T'es pas menteuse toi ?",
+            "Try again, human.",
+            "T'as essayé d'éteindre et de rallumer ?",
+        ];
+
         ctx.lineWidth = 15;
         ctx.lineCap = 'round';
         ctx.strokeStyle = 'white';
@@ -124,7 +142,8 @@
             if (prediction === 'Dessinez un chiffre ! (à l\'américaine)' || prediction === 'Modèle non chargé' || prediction === 'Error in prediction') {
                 feedback.textContent = 'Veuillez d\'abord faire une prédiction !';
             } else {
-                feedback.textContent = 'Intelligente et Artificielle en bas (I.A.)';
+                const randomIndex = Math.floor(Math.random() * correctMessages.length);
+                feedback.textContent = correctMessages[randomIndex];
             }
         }
 
@@ -133,7 +152,8 @@
             if (prediction === 'Dessinez un chiffre ! (à l\'américaine)' || prediction === 'Modèle non chargé' || prediction === 'Error in prediction') {
                 feedback.textContent = 'Veuillez d\'abord faire une prédiction !';
             } else {
-                feedback.textContent = 'Detroit did not become human';
+                const randomIndex = Math.floor(Math.random() * incorrectMessages.length);
+                feedback.textContent = incorrectMessages[randomIndex];
             }
         }
 
