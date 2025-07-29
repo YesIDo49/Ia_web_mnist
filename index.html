@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Est ce que l'IA sait lire ?</title>
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/ort.min.js"></script>
+    <style>
+        canvas {
+            border: 1px solid red;
+            background-color: black;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Est ce que l'IA sait lire ?</h1>
+    <canvas id="canvas" width="280" height="280"></canvas>
+    <div class="controls">
+        <button onclick="clearCanvas()">Effacer</button>
+        <button onclick="predict()">Prédire</button>
+    </div>
+    <h2>Prédiction: <span id="prediction">Dessinez un chiffre ! (à l'américaine)</span></h2>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let session = null;
+
+        ctx.lineWidth = 15;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = 'white';
+
+        async function initSession() {
+            try {
+                session = await ort.InferenceSession.create('./mnist_model.onnx');
+                console.log('ONNX session initialized successfully');
+            } catch (e) {
+                console.error('Error initializing ONNX session:', e);
+                document.getElementById('prediction').textContent = 'Error loading model';
+            }
+        }
+
+        initSession();
+
+        canvas.addEventListener('mousedown', () => isDrawing = true);
+        canvas.addEventListener('mouseup', () => isDrawing = false);
+        canvas.addEventListener('mouseout', () => isDrawing = false);
+        canvas.addEventListener('mousemove', draw);
+
+        function draw(event) {
+            if (!isDrawing) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.beginPath();
+            document.getElementById('prediction').textContent = 'Dessinez un chiffre ! (à l\'américaine)';
+        }
+
+        async function predict() {
+            if (!session) {
+                document.getElementById('prediction').textContent = 'Modèle non chargé';
+                return;
+            }
+
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = 28;
+            tempCanvas.height = 28;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.drawImage(canvas, 0, 0, 28, 28);
+            document.body.appendChild(tempCanvas);
+            setTimeout(() => document.body.removeChild(tempCanvas), 2000);
+            
+            const imageData = tempCtx.getImageData(0, 0, 28, 28);
+            const data = new Float32Array(1 * 1 * 28 * 28);
+            for (let i = 0; i < imageData.data.length; i += 4) {
+                // Convert to grayscale and normalize (no inversion)
+                const avg = (imageData.data[i] + imageData.data[i + 1] + imageData.data[i + 2]) / 3;
+                data[i / 4] = (avg / 255.0 - 0.1307) / 0.3081; // Normalize to match MNIST
+            }
+
+            console.log('Input tensor (first 50 values):', Array.from(data).slice(0, 50));
+
+            const tensor = new ort.Tensor('float32', data, [1, 1, 28, 28]);
+
+            try {
+                const feeds = { input: tensor };
+                const results = await session.run(feeds);
+                const output = results.output.data;
+                
+                console.log('Model output:', Array.from(output));
+
+                let maxProb = -Infinity;
+                let prediction = 0;
+                for (let i = 0; i < output.length; i++) {
+                    if (output[i] > maxProb) {
+                        maxProb = output[i];
+                        prediction = i;
+                    }
+                }
+                
+                document.getElementById('prediction').textContent = prediction;
+            } catch (e) {
+                console.error('Error running inference:', e);
+                document.getElementById('prediction').textContent = 'Error in prediction';
+            }
+        }
+    </script>
+</body>
+</html>
