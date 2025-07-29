@@ -63,10 +63,24 @@
 
         initSession();
 
-        canvas.addEventListener('mousedown', () => isDrawing = true);
-        canvas.addEventListener('mouseup', () => isDrawing = false);
-        canvas.addEventListener('mouseout', () => isDrawing = false);
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
         canvas.addEventListener('mousemove', draw);
+
+        function startDrawing(event) {
+            isDrawing = true;
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+            ctx.beginPath();
+        }
 
         function draw(event) {
             if (!isDrawing) return;
@@ -103,9 +117,8 @@
             const imageData = tempCtx.getImageData(0, 0, 28, 28);
             const data = new Float32Array(1 * 1 * 28 * 28);
             for (let i = 0; i < imageData.data.length; i += 4) {
-                // Convert to grayscale and normalize (no inversion)
                 const avg = (imageData.data[i] + imageData.data[i + 1] + imageData.data[i + 2]) / 3;
-                data[i / 4] = (avg / 255.0 - 0.1307) / 0.3081; // Normalize to match MNIST
+                data[i / 4] = (avg / 255.0 - 0.1307) / 0.3081;
             }
 
             console.log('Input tensor (first 50 values):', Array.from(data).slice(0, 50));
