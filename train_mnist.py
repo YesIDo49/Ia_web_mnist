@@ -34,7 +34,7 @@ class Net(nn.Module):
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 batch_size = 64
-epochs = 5
+epochs = 15
 
 transform = transforms.Compose([
     transforms.RandomRotation(10),
